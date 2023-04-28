@@ -85,21 +85,6 @@ class AddNewsCubit extends Cubit<AddNewsState> {
     }
   }
 
-  Future<void> getAllTag() async {
-    // try {
-    //   final tags = await _tagRepository.getAll(0, 10);
-    //   tags.map((e) => tagNameList.add(e.tag));
-    //   if (tags.length.isNaN) {
-    //     emit(state.copyWith(status: AddNewsStatus.ERROR));
-    //   } else {
-    //     emit(state.copyWith(
-    //         status: AddNewsStatus.LOADED, tagsName: tagNameList));
-    //   }
-    // } catch (e) {
-    //   emit(state.copyWith(status: AddNewsStatus.ERROR));
-    // }
-  }
-
   Future<void> createTag() async {
     for (var tagName in tagNameList) {
       TagModel tagModel = await _tagRepository.getTagByTagName(tagName);
