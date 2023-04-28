@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "897697020536",
+    "project_id": "haberifyapp",
+    "storage_bucket": "haberifyapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:897697020536:android:7b5410bf10d0a8bbc78b8d",
+        "android_client_info": {
+          "package_name": "com.haberify.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "897697020536-f99g33sp10ao9r96en8sflbhf95t4hn1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwtRMDSUNnwk7pfdEQc0JSf4wEzI2EPiM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "897697020536-f99g33sp10ao9r96en8sflbhf95t4hn1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
