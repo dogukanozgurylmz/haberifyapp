@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:haberifyapp/features/presentation/addnews/add_news_view.dart';
 import 'package:haberifyapp/features/presentation/discovery/discovery_view.dart';
-import 'package:haberifyapp/features/presentation/views/home/home_view.dart';
+import 'package:haberifyapp/features/presentation/home/home_view.dart';
 import 'package:haberifyapp/features/presentation/live/live_view.dart';
 import 'package:haberifyapp/features/presentation/profile/profile_view.dart';
 import 'package:haberifyapp/features/widgets/blur_background.dart';

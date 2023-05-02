@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:haberifyapp/features/data/repositories/news_repository.dart';
 import 'package:haberifyapp/features/data/repositories/tag_repository.dart';
 import 'package:haberifyapp/features/presentation/discovery/cubit/discovery_cubit.dart';
@@ -17,7 +18,7 @@ class DiscoveryView extends StatelessWidget {
       create: (context) => DiscoveryCubit(
         tagRepository: _tagRepository,
         newsRepository: _newsRepository,
-      ),
+      )..getAllTag(),
       child: BlocBuilder<DiscoveryCubit, DiscoveryState>(
         builder: (context, state) {
           return Scaffold(
@@ -30,165 +31,109 @@ class DiscoveryView extends StatelessWidget {
                 labelText: "Ara",
               ),
             ),
-            body: Padding(
-              padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TagsWidget(state: state),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    flex: 15,
-                    child: state.newsList.isEmpty
-                        ? const SizedBox.shrink()
-                        : ListView.builder(
-                            itemCount: state.newsList.length,
-                            physics: const BouncingScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              return Column(
-                                children: [
-                                  Container(
-                                    height: 160,
-                                    width: MediaQuery.of(context).size.width,
-                                    padding: const EdgeInsets.all(8),
-                                    alignment: Alignment.centerLeft,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(30),
-                                      image: DecorationImage(
-                                        image: NetworkImage(
-                                          state.newsList[index].newsPhotoIds
-                                              .first,
-                                        ),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        BlurBackgroundWidget(
-                                          blur: 10,
-                                          opacity: 0.5,
-                                          borderRadius: 30,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(12),
-                                            width: MediaQuery.of(context)
-                                                .size
-                                                .width,
-                                            child: const Text(
-                                              "Lorem Ipsum",
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  SizedBox(height: 8)
-                                ],
-                              );
-                            },
-                          ),
-                  )
-                ],
-              ),
-            ),
+            body: DiscoveryWidget(state: state),
           );
         },
       ),
     );
   }
-
-  Container _discoveryNews(BuildContext context) {
-    return Container(
-      height: 160,
-      width: MediaQuery.of(context).size.width,
-      padding: const EdgeInsets.all(8),
-      alignment: Alignment.centerLeft,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        image: const DecorationImage(
-          image: NetworkImage("https://picsum.photos/1200/1200"),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          BlurBackgroundWidget(
-            blur: 10,
-            opacity: 0.5,
-            borderRadius: 30,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              width: MediaQuery.of(context).size.width,
-              child: const Text(
-                "Lorem Ipsum",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-class TagsWidget extends StatelessWidget {
+class DiscoveryWidget extends StatelessWidget {
   final DiscoveryState state;
-  TagsWidget({
+  const DiscoveryWidget({
     super.key,
     required this.state,
   });
 
-  final _scrollController = ScrollController();
-
   @override
   Widget build(BuildContext context) {
-    if (state.status == DiscoveryStatus.TAGLOADING) {
+    if (state.status == DiscoveryStatus.LOADING) {
       return Center(
         child: LoadingAnimationWidget.prograssiveDots(
             color: const Color(0xffff0000), size: 40),
       );
-    } else {
-      return Expanded(
-        flex: 1,
-        child: ListView.builder(
-          controller: _scrollController,
-          shrinkWrap: true,
-          physics: const BouncingScrollPhysics(),
-          scrollDirection: Axis.horizontal,
-          itemCount:
-              state.hasReachedMax ? state.tags.length : state.tags.length + 1,
-          itemBuilder: (context, index) {
+    } else if (state.status == DiscoveryStatus.LOADED) {
+      return GridView.custom(
+        physics: const BouncingScrollPhysics(),
+        gridDelegate: SliverQuiltedGridDelegate(
+          crossAxisSpacing: 1,
+          mainAxisSpacing: 1,
+          crossAxisCount: 20,
+          repeatPattern: QuiltedGridRepeatPattern.inverted,
+          pattern: const [
+            QuiltedGridTile(12, 12),
+            QuiltedGridTile(4, 8),
+            QuiltedGridTile(8, 8),
+            QuiltedGridTile(8, 8),
+            QuiltedGridTile(8, 12),
+            QuiltedGridTile(12, 10),
+            QuiltedGridTile(8, 10),
+            QuiltedGridTile(4, 10),
+          ],
+        ),
+        childrenDelegate: SliverChildBuilderDelegate(
+          childCount: state.tags.length,
+          (context, index) {
             if (index >= state.tags.length) {
               context.read<DiscoveryCubit>().getAllTag();
               return const Center(
                 child: CircularProgressIndicator(),
               );
             }
+            final images = [];
             final tag = state.tags[index];
-            return Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Chip(
-                padding: const EdgeInsets.all(4),
-                label: Text(
-                  "#${tag.tag}",
-                  style: TextStyle(color: Colors.grey[300]),
+            // state.tagNewsImageMap.keys.;
+            if (state.tagNewsImageMap.isNotEmpty) {
+              String firstWhere = state.tagNewsImageMap.keys
+                  .firstWhere((element) => element == tag.tag);
+              // if (firstWhere == tag.tag) {
+              for (var value in state.tagNewsImageMap.values) {
+                images.add(value);
+              }
+              // }
+            }
+            return Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: NetworkImage(
+                    images[index],
+                  ),
+                  fit: BoxFit.cover,
                 ),
-                backgroundColor: const Color(0xff0A0E11),
+              ),
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.black87,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Text(
+                      '#${tag.tag}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             );
           },
         ),
       );
+    } else {
+      return const SizedBox.shrink();
     }
   }
 }

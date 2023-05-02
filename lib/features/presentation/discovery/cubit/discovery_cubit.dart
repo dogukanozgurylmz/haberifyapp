@@ -19,6 +19,7 @@ class DiscoveryCubit extends Cubit<DiscoveryState> {
           hasReachedMax: false,
           tags: [],
           newsList: [],
+          tagNewsImageMap: {},
         )) {
     // init();
   }
@@ -30,6 +31,7 @@ class DiscoveryCubit extends Cubit<DiscoveryState> {
   bool _hasReachedMax = false;
   List<TagModel> tagList = [];
   final List<NewsModel> _newsList = [];
+  final Map<String, String> _tagNewsImageMap = {};
 
   Future<void> init() async {
     // await getAllTag();
@@ -38,7 +40,7 @@ class DiscoveryCubit extends Cubit<DiscoveryState> {
 
   Future<void> getAllTag() async {
     if (_hasReachedMax) return;
-    // emit(TagLoading());
+    emit(state.copyWith(status: DiscoveryStatus.LOADING));
     try {
       final tags = await _tagRepository.getAllPagination(_startIndex, _limit);
       if (tags.length < _limit) {
@@ -47,13 +49,13 @@ class DiscoveryCubit extends Cubit<DiscoveryState> {
 
       tagList.addAll(tags);
       emit(state.copyWith(
-        status: DiscoveryStatus.TAGLOADED,
         tags: tagList,
         hasReachedMax: _hasReachedMax,
       ));
       await getAllNews();
-
-      // emit(TagLoaded(tags: tagList, hasReachedMax: _hasReachedMax));
+      emit(state.copyWith(
+        status: DiscoveryStatus.LOADED,
+      ));
     } catch (error) {
       // emit(state.copyWith(message: error.toString()));
     }
@@ -61,21 +63,15 @@ class DiscoveryCubit extends Cubit<DiscoveryState> {
   }
 
   Future<void> getAllNews() async {
-    int turn = 0;
-    emit(state.copyWith(status: DiscoveryStatus.LOADING));
+    // emit(state.copyWith(status: DiscoveryStatus.LOADING));
     try {
       for (var tag in state.tags) {
-        for (var newsId in tag.newsIds) {
-          NewsModel newsModel = await _newsRepository.getNewsById(newsId);
-          _newsList.add(newsModel);
-          turn++;
-          print(turn);
-        }
+        var lastNewsId = tag.newsIds.last;
+        NewsModel newsModel = await _newsRepository.getNewsById(lastNewsId);
+        _tagNewsImageMap.addAll({tag.tag: newsModel.newsPhotoIds.first});
       }
-
       emit(state.copyWith(
-        newsList: _newsList,
-        status: DiscoveryStatus.LOADED,
+        tagNewsImageMap: _tagNewsImageMap,
       ));
     } catch (e) {
       print(e.toString());

@@ -1,92 +1,90 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:haberifyapp/features/data/repositories/city_repository.dart';
 import 'package:haberifyapp/features/data/repositories/news_repository.dart';
 import 'package:haberifyapp/features/data/repositories/user_repository.dart';
-import 'package:haberifyapp/features/presentation/blocs/city_cubit.dart';
-import 'package:haberifyapp/features/presentation/blocs/user_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:pinch_zoom/pinch_zoom.dart';
-import 'package:story_view/story_view.dart';
-
-import '../../../data/models/news_model.dart';
-import '../../blocs/news_bloc.dart';
+import '../../data/models/news_model.dart';
+import 'cubit/home_cubit.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    int index = 0;
     final NewsRepository newsRepository = NewsRepository();
     final CityRepository cityRepository = CityRepository();
     final UserRepository userRepository = UserRepository();
+    final controller = PageController(initialPage: 0);
     var size = MediaQuery.of(context).size;
 
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent, // StatusBar rengi
       statusBarIconBrightness: Brightness.light, // StatusBar ikonlarının rengi
     ));
-    return Scaffold(
-      body: MultiBlocProvider(
-        providers: [
-          BlocProvider<NewsBloc>(
-            create: (context) => NewsBloc(newsRepository: newsRepository)
-              ..add(
-                NewsGetAll(),
-              ),
-          ),
-          BlocProvider<UserBloc>(
-            create: (context) => UserBloc(userRepository: userRepository),
-          ),
-          BlocProvider<CityCubit>(
-            create: (context) => CityCubit(cityRepository: cityRepository),
-          ),
-        ],
-        child: BlocBuilder<NewsBloc, NewsState>(
+
+    void dsfsd() {
+      var cubit = context.read<HomeCubit>();
+      var state = context.read<HomeCubit>().state;
+      if (cubit.state.status == HomeStatus.LOADED) {
+        cubit.getCityById(state.newsList[0].cityId);
+        cubit.getUserByUsername(state.newsList[0].username);
+      }
+    }
+
+    return BlocProvider(
+      create: (context) => HomeCubit(
+        newsRepository: newsRepository,
+        cityRepository: cityRepository,
+        userRepository: userRepository,
+      ),
+      child: Scaffold(
+        body: BlocBuilder<HomeCubit, HomeState>(
           builder: (context, state) {
-            if (state is NewsLoading) {
+            var cubit = context.read<HomeCubit>();
+
+            if (state.status == HomeStatus.LOADING) {
               return Center(
                 child: LoadingAnimationWidget.prograssiveDots(
                   color: const Color(0xffff0000),
                   size: 60,
                 ),
               );
-            } else if (state is NewsLoaded) {
-              final cityCubit = context.read<CityCubit>();
-              final userBloc = context.read<UserBloc>();
-              final newsBloc = context.read<NewsBloc>();
+            } else if (state.status == HomeStatus.LOADED) {
               return Stack(
                 children: [
                   PageView.builder(
                     scrollDirection: Axis.vertical,
                     itemCount: state.newsList.length,
-                    onPageChanged: (value) => index = value,
+                    onPageChanged: (value) {
+                      var news = state.newsList[value];
+                      cubit.getCityById(news.cityId);
+                      cubit.getUserByUsername(news.username);
+                    },
                     itemBuilder: (BuildContext context, int index) {
-                      final cityId = state.newsList[index].cityId;
-                      final username = state.newsList[index].username;
-                      cityCubit.getCityById(cityId);
-                      userBloc.add(GetUserByUsername(username));
+                      var news = state.newsList[index];
                       return PageBuild(
                         size: size,
-                        newsModel: state.newsList[index],
-                        newsBloc: newsBloc,
+                        newsModel: news,
+                        cubit: cubit,
+                        state: state,
                       );
                     },
+                    controller: controller,
                   ),
-                  const Positioned(
+                  Positioned(
                     top: 0,
                     left: 0,
                     right: 0,
-                    child: HomeAppBar(),
+                    child: HomeAppBar(
+                      state: state,
+                    ),
                   ),
                 ],
-              );
-            } else if (state is NewsError) {
-              return Center(
-                child: Text(state.message),
               );
             } else {
               return const SizedBox.shrink();
@@ -98,10 +96,33 @@ class HomeView extends StatelessWidget {
   }
 }
 
-class HomeAppBar extends StatelessWidget {
+class HomeAppBar extends StatefulWidget {
+  final HomeState state;
   const HomeAppBar({
     super.key,
+    required this.state,
   });
+
+  @override
+  State<HomeAppBar> createState() => _HomeAppBarState();
+}
+
+class _HomeAppBarState extends State<HomeAppBar> {
+  void dsfsd() {
+    var cubit = context.read<HomeCubit>();
+    var state = context.read<HomeCubit>().state;
+    if (cubit.state.status == HomeStatus.LOADED) {
+      cubit.getCityById(state.newsList[0].cityId);
+      cubit.getUserByUsername(state.newsList[0].username);
+    }
+  }
+
+  @override
+  void initState() {
+    dsfsd();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -110,11 +131,8 @@ class HomeAppBar extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            // Colors.black,
             Colors.black.withOpacity(0.8),
-            // Colors.black.withOpacity(0.6),
             Colors.black.withOpacity(0.4),
-            // Colors.black.withOpacity(0.2),
             Colors.transparent
           ],
           begin: Alignment.topCenter,
@@ -136,25 +154,13 @@ class HomeAppBar extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              BlocBuilder<CityCubit, CityState>(
-                builder: (context, state) {
-                  if (state is CityLoaded) {
-                    return Text(
-                      state.city.city,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    );
-                  } else if (state is CityLoading) {
-                    return const CircularProgressIndicator(
-                      color: Colors.transparent,
-                    );
-                  } else {
-                    return const SizedBox.shrink();
-                  }
-                },
-              )
+              Text(
+                widget.state.city.city,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
             ],
           ),
         ),
@@ -168,12 +174,14 @@ class PageBuild extends StatelessWidget {
     super.key,
     required this.size,
     required this.newsModel,
-    required this.newsBloc,
+    required this.cubit,
+    required this.state,
   });
 
   final Size size;
   final NewsModel newsModel;
-  final NewsBloc newsBloc;
+  final HomeCubit cubit;
+  final HomeState state;
 
   // bool readMore = false;
   @override
@@ -225,7 +233,7 @@ class PageBuild extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        newsBloc.timeConvert(newsModel),
+                        cubit.timeConvert(newsModel),
                         style: const TextStyle(
                           color: Colors.white54,
                           fontSize: 12,
@@ -288,9 +296,10 @@ class PageBuild extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
+                    // CircleAvatar(backgroundImage: NetworkImage(state.userModel.),)
                     const SizedBox(width: 8),
                     Text(
-                      newsModel.username,
+                      state.userModel.username,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.normal,
@@ -381,15 +390,3 @@ class PageBuild extends StatelessWidget {
     );
   }
 }
-
-// showModalBottomSheet(
-//               context: context,
-//               builder: (BuildContext context) {
-//                 return Container(
-//                   height: 200.0,
-//                   child: Center(
-//                     child: Text('This is a bottom sheet'),
-//                   ),
-//                 );
-//               },
-//             );

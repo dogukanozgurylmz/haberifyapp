@@ -12,10 +12,12 @@ class UserRepository {
     return list;
   }
 
-  Future<UserModel> getByUsername(String uid) async {
+  Future<UserModel> getByUsername(String username) async {
     try {
-      QuerySnapshot<Map<String, dynamic>> documentSnapshot =
-          await firestore.collection('users').where('id', isEqualTo: uid).get();
+      QuerySnapshot<Map<String, dynamic>> documentSnapshot = await firestore
+          .collection('users')
+          .where('username', isEqualTo: username)
+          .get();
       return UserModel.fromJson(documentSnapshot.docs[0].data());
     } on FirebaseException catch (e) {
       throw e.message.toString();

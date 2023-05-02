@@ -48,6 +48,7 @@ class NewsRepository {
   Future<void> uploadImage({
     required List<File> images,
   }) async {
+    _downloadURLs.clear();
     for (var image in images) {
       String generateRandomString = _generateRandomString(20);
       Reference ref =

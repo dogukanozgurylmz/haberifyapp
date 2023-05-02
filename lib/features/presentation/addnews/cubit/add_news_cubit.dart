@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -107,6 +105,7 @@ class AddNewsCubit extends Cubit<AddNewsState> {
         await _tagRepository.create(model);
       }
     }
+    emit(state.copyWith(newsId: ''));
   }
 
   Future<void> createNews() async {
