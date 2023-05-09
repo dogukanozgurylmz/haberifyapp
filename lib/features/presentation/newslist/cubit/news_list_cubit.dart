@@ -1,39 +1,39 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/rendering.dart';
-import 'package:haberifyapp/features/data/datasouce/local/news_local_datasource.dart';
-import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
-import 'package:haberifyapp/features/data/models/city_model.dart';
-import 'package:haberifyapp/features/data/models/follow_model.dart';
-import 'package:haberifyapp/features/data/repositories/auth_repository.dart';
-import 'package:haberifyapp/features/data/repositories/city_repository.dart';
-import 'package:haberifyapp/features/data/repositories/follow_repository.dart';
-import 'package:haberifyapp/features/data/repositories/news_repository.dart';
-import 'package:haberifyapp/features/data/repositories/user_repository.dart';
+import 'package:haberifyapp/features/data/models/tag_model.dart';
+import 'package:haberifyapp/features/data/repositories/tag_repository.dart';
 import 'package:intl/intl.dart';
 
+import '../../../data/datasouce/local/news_local_datasource.dart';
+import '../../../data/datasouce/local/user_local_datasource.dart';
+import '../../../data/models/city_model.dart';
+import '../../../data/models/follow_model.dart';
 import '../../../data/models/news_model.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/repositories/auth_repository.dart';
+import '../../../data/repositories/city_repository.dart';
+import '../../../data/repositories/follow_repository.dart';
+import '../../../data/repositories/news_repository.dart';
+import '../../../data/repositories/user_repository.dart';
 
-part 'home_state.dart';
+part 'news_list_state.dart';
 
-class HomeCubit extends Cubit<HomeState> {
-  HomeCubit({
+class NewsListCubit extends Cubit<NewsListState> {
+  NewsListCubit({
     required NewsRepository newsRepository,
     required CityRepository cityRepository,
     required UserRepository userRepository,
     required FollowRepository followRepository,
     required AuthRepository authRepository,
-    required NewsLocalDatasource newsLocalDatasource,
+    required TagRepository tagRepository,
   })  : _newsRepository = newsRepository,
         _cityRepository = cityRepository,
         _userRepository = userRepository,
         _followRepository = followRepository,
         _authRepository = authRepository,
-        _newsLocalDatasource = newsLocalDatasource,
-        super(HomeState(
-          status: HomeStatus.INITIAL,
+        _tagRepository = tagRepository,
+        super(NewsListState(
+          status: NewsListStatus.INITIAL,
           newsList: const [],
           userModel: UserModel(
             profilePhotoUrl: '',
@@ -52,61 +52,56 @@ class HomeCubit extends Cubit<HomeState> {
             city: '',
           ),
           cities: const [],
-          likes: const [], isLike: false,
-          // followUsernames: [],
-          // followModel: FollowModel(
-          //   id: '',
-          //   username: '',
-          //   followUsernames: [],
-          // ),
+          likes: const [],
+          isLike: false,
+          isTagLoaded: false,
         )) {
-    init();
+    // init();
   }
-
   final NewsRepository _newsRepository;
   final CityRepository _cityRepository;
   final UserRepository _userRepository;
   final FollowRepository _followRepository;
   final AuthRepository _authRepository;
-  final NewsLocalDatasource _newsLocalDatasource;
+  final TagRepository _tagRepository;
 
   final List<String> _followUsernames = [];
   String username = "";
 
+  TagModel _tagModel = TagModel(
+    id: 'id',
+    newsIds: [],
+    tag: 'tag',
+    count: 0,
+  );
+
   Future<void> init() async {
-    emit(state.copyWith(status: HomeStatus.LOADING));
-    await getFollows();
+    emit(state.copyWith(status: NewsListStatus.LOADING));
     await newsGetAll();
     await getUser();
-    emit(state.copyWith(status: HomeStatus.LOADED));
+    emit(state.copyWith(status: NewsListStatus.LOADED));
   }
 
-  // Future<void> localNewsList() async {
-  //   emit(state.copyWith(status: HomeStatus.LOADING));
-  //   var list = await _newsLocalDatasource.getNews();
-  //   list.sort(
-  //     (a, b) => b.createdAt.compareTo(a.createdAt),
-  //   );
-  //   emit(state.copyWith(newsList: list, status: HomeStatus.LOADED));
-  // }
+  Future<void> getTag(String tagName) async {
+    emit(state.copyWith(status: NewsListStatus.LOADING));
+
+    emit(state.copyWith(isTagLoaded: false));
+    _tagModel = await _tagRepository.getTagByTagName(tagName);
+    await newsGetAll();
+    emit(state.copyWith(status: NewsListStatus.LOADED));
+
+    emit(state.copyWith(isTagLoaded: true));
+  }
 
   Future<void> newsGetAll() async {
     try {
-      await _newsLocalDatasource.deleteAll();
-      List<NewsModel> newsList = [];
-      for (var username in _followUsernames) {
-        List<NewsModel> list =
-            await _newsRepository.getNewsListByUsername(username);
-        newsList.addAll(list);
-      }
-      for (var news in newsList) {
-        await _newsLocalDatasource.add(news);
-      }
-      newsList.sort(
+      var list = await _newsRepository.getNewsListById(_tagModel.newsIds);
+      list.sort(
         (a, b) => b.createdAt.compareTo(a.createdAt),
       );
-      emit(state.copyWith(newsList: newsList));
+      emit(state.copyWith(newsList: list));
     } catch (e) {
+      print(e.toString());
       // emit(NewsError(e.toString()));
     }
   }
@@ -141,14 +136,6 @@ class HomeCubit extends Cubit<HomeState> {
     final UserLocalDatasource userLocalDatasource = UserLocalDatasource();
     var userModel = await userLocalDatasource.getUser();
     username = userModel.username;
-  }
-
-  Future<void> getFollows() async {
-    UserLocalDatasource userLocalDatasource = UserLocalDatasource();
-    var user = await userLocalDatasource.getUser();
-    FollowModel followModel =
-        await _followRepository.getFollowsByUsername(user.username);
-    _followUsernames.addAll(followModel.followUsernames);
   }
 
   Future<void> like(NewsModel newsModel) async {

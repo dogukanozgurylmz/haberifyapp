@@ -21,26 +21,33 @@ class DiscoveryCubit extends Cubit<DiscoveryState> {
           newsList: [],
           tagNewsImageMap: {},
         )) {
-    // init();
+    init();
   }
 
   final TagRepository _tagRepository;
   final NewsRepository _newsRepository;
   int _startIndex = 0;
-  final int _limit = 10;
+  final int _limit = 18;
   bool _hasReachedMax = false;
   List<TagModel> tagList = [];
   final List<NewsModel> _newsList = [];
   final Map<String, String> _tagNewsImageMap = {};
 
   Future<void> init() async {
-    // await getAllTag();
-    await getAllNews();
+    emit(state.copyWith(status: DiscoveryStatus.LOADING));
+    await getAllTag();
+    emit(state.copyWith(status: DiscoveryStatus.LOADED));
   }
+
+  // bool changeTagLoad(bool isLoaded){
+  //   if (isLoaded) {
+
+  //   return emit(state.copyWith())
+  //   }
+  // }
 
   Future<void> getAllTag() async {
     if (_hasReachedMax) return;
-    emit(state.copyWith(status: DiscoveryStatus.LOADING));
     try {
       final tags = await _tagRepository.getAllPagination(_startIndex, _limit);
       if (tags.length < _limit) {
@@ -48,14 +55,9 @@ class DiscoveryCubit extends Cubit<DiscoveryState> {
       }
 
       tagList.addAll(tags);
-      emit(state.copyWith(
-        tags: tagList,
-        hasReachedMax: _hasReachedMax,
-      ));
+      emit(state.copyWith(tags: tagList));
       await getAllNews();
-      emit(state.copyWith(
-        status: DiscoveryStatus.LOADED,
-      ));
+      emit(state.copyWith(hasReachedMax: _hasReachedMax));
     } catch (error) {
       // emit(state.copyWith(message: error.toString()));
     }

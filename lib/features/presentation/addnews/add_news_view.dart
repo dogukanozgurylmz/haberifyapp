@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
 import 'package:haberifyapp/features/data/models/city_model.dart';
 import 'package:haberifyapp/features/data/repositories/city_repository.dart';
 import 'package:haberifyapp/features/data/repositories/news_repository.dart';
@@ -13,6 +14,7 @@ class AddNewsView extends StatelessWidget {
   final CityRepository _cityRepository = CityRepository();
   final TagRepository _tagRepository = TagRepository();
   final NewsRepository _newsRepository = NewsRepository();
+  final UserLocalDatasource _userLocalDatasource = UserLocalDatasource();
   AddNewsView({super.key});
 
   @override
@@ -23,6 +25,7 @@ class AddNewsView extends StatelessWidget {
         cityRepository: _cityRepository,
         newsRepository: _newsRepository,
         tagRepository: _tagRepository,
+        userLocalDatasource: _userLocalDatasource,
       )..getAllCity(),
       child: BlocBuilder<AddNewsCubit, AddNewsState>(
         builder: (context, state) {

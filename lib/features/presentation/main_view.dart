@@ -58,37 +58,67 @@ class _MainViewState extends State<MainView> {
                   backgroundColor: Colors.black.withOpacity(0.4),
                   elevation: 0,
                   selectedItemColor: Colors.white,
-                  unselectedItemColor: Colors.grey,
+                  unselectedItemColor: Colors.white,
                   onTap: onTabTapped,
                   currentIndex: _currentIndex,
                   type: BottomNavigationBarType.fixed,
                   showSelectedLabels: false,
                   showUnselectedLabels: false,
-                  items: const [
+                  items: [
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.home_outlined),
+                      icon: const Icon(Icons.newspaper),
                       label: '',
-                      activeIcon: Icon(Icons.home),
+                      activeIcon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                            color: const Color(0xffff0000),
+                            borderRadius: BorderRadius.circular(50)),
+                        child: const Icon(Icons.newspaper, size: 20),
+                      ),
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.search),
+                      icon: const Icon(Icons.search),
                       label: '',
-                      activeIcon: Icon(Icons.search),
+                      activeIcon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                            color: const Color(0xffff0000),
+                            borderRadius: BorderRadius.circular(50)),
+                        child: const Icon(Icons.search, size: 20),
+                      ),
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.add),
+                      icon: const Icon(Icons.add_box),
                       label: '',
-                      activeIcon: Icon(Icons.add_box),
+                      activeIcon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                            color: const Color(0xffff0000),
+                            borderRadius: BorderRadius.circular(50)),
+                        child: const Icon(Icons.add, size: 20),
+                      ),
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.live_tv_rounded),
+                      icon: const Icon(Icons.live_tv_rounded),
                       label: '',
-                      activeIcon: Icon(Icons.live_tv_rounded),
+                      activeIcon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                            color: const Color(0xffff0000),
+                            borderRadius: BorderRadius.circular(50)),
+                        child: const Icon(Icons.live_tv_rounded, size: 20),
+                      ),
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.person_outline),
+                      icon: const Icon(Icons.person_outline),
                       label: '',
-                      activeIcon: Icon(Icons.person),
+                      activeIcon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                            color: const Color(0xffff0000),
+                            borderRadius: BorderRadius.circular(50)),
+                        child: const Icon(Icons.person_outline, size: 20),
+                      ),
                     ),
                   ],
                 ),

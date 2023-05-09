@@ -1,32 +1,37 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
+import 'package:haberifyapp/features/data/repositories/auth_repository.dart';
+import 'package:haberifyapp/features/data/repositories/follow_repository.dart';
+import 'package:haberifyapp/features/data/repositories/follower_repository.dart';
+import 'package:haberifyapp/features/data/repositories/user_repository.dart';
 import 'package:haberifyapp/features/presentation/sign_in/sign_in_view.dart';
-import 'package:haberifyapp/features/presentation/sign_up/sign_up_view_model.dart';
 import 'package:haberifyapp/features/widgets/custom_textformfield.dart';
-import 'package:stacked/stacked.dart';
+import 'package:image_picker/image_picker.dart';
 
-class SignUpView extends StatefulWidget {
-  const SignUpView({super.key});
+import 'cubit/signup_cubit.dart';
 
-  @override
-  State<SignUpView> createState() => _SignUpViewState();
-}
-
-class _SignUpViewState extends State<SignUpView> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _surnameController = TextEditingController();
-  final TextEditingController _repeatPasswordController =
-      TextEditingController();
+class SignUpView extends StatelessWidget {
+  final UserRepository userRepository = UserRepository();
+  final AuthRepository authRepository = AuthRepository();
+  final UserLocalDatasource userLocalDatasource = UserLocalDatasource();
+  final FollowRepository followRepository = FollowRepository();
+  final FollowerRepository followerRepository = FollowerRepository();
+  SignUpView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ViewModelBuilder.reactive(
-        viewModelBuilder: () => SignUpViewModel(),
-        builder: (context, viewModel, child) {
+    return BlocProvider(
+      create: (context) => SignupCubit(
+        userRepository: userRepository,
+        authRepository: authRepository,
+        userLocalDatasource: userLocalDatasource,
+        followRepository: followRepository,
+        followerRepository: followerRepository,
+      ),
+      child: BlocBuilder<SignupCubit, SignupState>(
+        builder: (context, state) {
+          var cubit = context.read<SignupCubit>();
           return Scaffold(
             body: Center(
               child: Padding(
@@ -35,6 +40,40 @@ class _SignUpViewState extends State<SignUpView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(30),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                                fit: BoxFit.cover,
+                                image: state.image.path != ""
+                                    ? FileImage(state.image)
+                                    : const NetworkImage(
+                                            "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png")
+                                        as ImageProvider),
+                          ),
+                          child: InkWell(
+                            onTap: () async =>
+                                await cubit.getImageFromCameraOrGallery(
+                                    source: ImageSource.gallery),
+                            child: const SizedBox(
+                              width: 120,
+                              height: 120,
+                              child: Icon(Icons.add_a_photo_outlined),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // InkWell(
+                      //   onTap: () async =>
+                      //       await cubit.getImageFromCameraOrGallery(
+                      //           source: ImageSource.gallery),
+                      //   child: const SizedBox(
+                      //     width: 200,
+                      //     height: 200,
+                      //     child: Icon(Icons.add_a_photo_outlined),
+                      //   ),
+                      // ),
                       const Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
@@ -44,7 +83,7 @@ class _SignUpViewState extends State<SignUpView> {
                       ),
                       const SizedBox(height: 8),
                       CustomTextFormField(
-                        controller: _nameController,
+                        controller: cubit.firstnameController,
                         labelText: "Ad",
                         borderRadius: 30,
                       ),
@@ -58,7 +97,7 @@ class _SignUpViewState extends State<SignUpView> {
                       ),
                       const SizedBox(height: 8),
                       CustomTextFormField(
-                        controller: _surnameController,
+                        controller: cubit.lastnameController,
                         labelText: "Soyad",
                         borderRadius: 30,
                       ),
@@ -72,7 +111,7 @@ class _SignUpViewState extends State<SignUpView> {
                       ),
                       const SizedBox(height: 8),
                       CustomTextFormField(
-                        controller: _usernameController,
+                        controller: cubit.usernameController,
                         labelText: "Kullanıcı adı",
                         borderRadius: 30,
                       ),
@@ -86,7 +125,7 @@ class _SignUpViewState extends State<SignUpView> {
                       ),
                       const SizedBox(height: 8),
                       CustomTextFormField(
-                        controller: _emailController,
+                        controller: cubit.emailController,
                         labelText: "E-posta",
                         borderRadius: 30,
                       ),
@@ -100,7 +139,7 @@ class _SignUpViewState extends State<SignUpView> {
                       ),
                       const SizedBox(height: 8),
                       CustomTextFormField(
-                        controller: _passwordController,
+                        controller: cubit.passwordController,
                         labelText: "Şifre",
                         borderRadius: 30,
                       ),
@@ -114,7 +153,7 @@ class _SignUpViewState extends State<SignUpView> {
                       ),
                       const SizedBox(height: 8),
                       CustomTextFormField(
-                        controller: _repeatPasswordController,
+                        controller: cubit.repeatPasswordController,
                         labelText: "Şifre Tekrarı",
                         borderRadius: 30,
                       ),
@@ -132,28 +171,25 @@ class _SignUpViewState extends State<SignUpView> {
                           const Text("Kullanıcı sözleşmesi"),
                         ],
                       ),
-                      viewModel.isLoading
+                      state.isLoading
                           ? const CircularProgressIndicator(
                               color: Color(0xffff0000),
                             )
                           : GestureDetector(
                               onTap: () async {
-                                await viewModel.signUp(
-                                  firstname: _nameController.text,
-                                  lastname: _surnameController.text,
-                                  username: _usernameController.text,
-                                  email: _emailController.text,
-                                  password: _passwordController.text,
-                                );
-                                if (viewModel.isSignUp) {
+                                if (cubit.controle()) {
+                                  await cubit.createUserWithEmailAndPassword();
+                                  await cubit.uploadImage();
+                                }
+                                if (state.isSignUp) {
                                   Navigator.of(context)
                                       .pushReplacement(MaterialPageRoute(
                                     builder: (context) => const SignInView(),
                                   ));
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Kayıt başarısız"),
+                                    SnackBar(
+                                      content: Text(state.errorMessage),
                                     ),
                                   );
                                 }
@@ -177,46 +213,46 @@ class _SignUpViewState extends State<SignUpView> {
                       const SizedBox(height: 8),
                       const Divider(),
                       const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          GestureDetector(
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              width: MediaQuery.of(context).size.width * 0.45,
-                              decoration: BoxDecoration(
-                                color: const Color(0xffff0000),
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              child: const Text(
-                                "Google ile kayıt ol",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                          GestureDetector(
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              width: MediaQuery.of(context).size.width * 0.45,
-                              decoration: BoxDecoration(
-                                color: Colors.black,
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              child: const Text(
-                                "Apple ile kayıt ol",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //   children: [
+                      //     GestureDetector(
+                      //       child: Container(
+                      //         padding: const EdgeInsets.all(12),
+                      //         width: MediaQuery.of(context).size.width * 0.45,
+                      //         decoration: BoxDecoration(
+                      //           color: const Color(0xffff0000),
+                      //           borderRadius: BorderRadius.circular(30),
+                      //         ),
+                      //         child: const Text(
+                      //           "Google ile kayıt ol",
+                      //           textAlign: TextAlign.center,
+                      //           style: TextStyle(
+                      //             color: Colors.white,
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ),
+                      //     GestureDetector(
+                      //       child: Container(
+                      //         padding: const EdgeInsets.all(12),
+                      //         width: MediaQuery.of(context).size.width * 0.45,
+                      //         decoration: BoxDecoration(
+                      //           color: Colors.black,
+                      //           borderRadius: BorderRadius.circular(30),
+                      //         ),
+                      //         child: const Text(
+                      //           "Apple ile kayıt ol",
+                      //           textAlign: TextAlign.center,
+                      //           style: TextStyle(
+                      //             color: Colors.white,
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
+                      // const SizedBox(height: 16),
                       GestureDetector(
                         onTap: () => Navigator.of(context)
                             .pushReplacement(MaterialPageRoute(
@@ -245,6 +281,8 @@ class _SignUpViewState extends State<SignUpView> {
               ),
             ),
           );
-        });
+        },
+      ),
+    );
   }
 }

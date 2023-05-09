@@ -1,22 +1,26 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:haberifyapp/features/data/datasouce/local/news_local_datasource.dart';
 import 'package:haberifyapp/features/data/repositories/auth_repository.dart';
 import 'package:haberifyapp/features/data/repositories/city_repository.dart';
 import 'package:haberifyapp/features/data/repositories/follow_repository.dart';
 import 'package:haberifyapp/features/data/repositories/news_repository.dart';
 import 'package:haberifyapp/features/data/repositories/user_repository.dart';
+import 'package:haberifyapp/features/presentation/newslist/cubit/news_list_cubit.dart';
 import 'package:haberifyapp/features/presentation/other_profile/other_profile_view.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:pinch_zoom/pinch_zoom.dart';
 import '../../data/models/news_model.dart';
-import 'cubit/home_cubit.dart';
+import '../../data/repositories/tag_repository.dart';
 
-class HomeView extends StatelessWidget {
-  const HomeView({super.key});
+class NewsListView extends StatelessWidget {
+  final String tagName;
+
+  const NewsListView({
+    super.key,
+    required this.tagName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +29,8 @@ class HomeView extends StatelessWidget {
     final UserRepository userRepository = UserRepository();
     final AuthRepository authRepository = AuthRepository();
     final FollowRepository followRepository = FollowRepository();
-    final NewsLocalDatasource newsLocalDatasource = NewsLocalDatasource();
+    final TagRepository tagRepository = TagRepository();
+
     final controller = PageController(initialPage: 0);
     var size = MediaQuery.of(context).size;
 
@@ -35,27 +40,29 @@ class HomeView extends StatelessWidget {
     ));
 
     return BlocProvider(
-      create: (context) => HomeCubit(
+      create: (context) => NewsListCubit(
         newsRepository: newsRepository,
         cityRepository: cityRepository,
         userRepository: userRepository,
         authRepository: authRepository,
         followRepository: followRepository,
-        newsLocalDatasource: newsLocalDatasource,
-      ),
+        tagRepository: tagRepository,
+      )
+        ..getTag(tagName)
+        ..getUser(),
       child: Scaffold(
-        body: BlocBuilder<HomeCubit, HomeState>(
+        body: BlocBuilder<NewsListCubit, NewsListState>(
           builder: (context, state) {
-            var cubit = context.read<HomeCubit>();
+            var cubit = context.read<NewsListCubit>();
 
-            if (state.status == HomeStatus.LOADING) {
+            if (state.status == NewsListStatus.LOADING) {
               return Center(
-                child: LoadingAnimationWidget.prograssiveDots(
+                child: LoadingAnimationWidget.inkDrop(
                   color: const Color(0xffff0000),
                   size: 60,
                 ),
               );
-            } else if (state.status == HomeStatus.LOADED) {
+            } else if (state.status == NewsListStatus.LOADED) {
               return Stack(
                 children: [
                   PageView.builder(
@@ -83,6 +90,7 @@ class HomeView extends StatelessWidget {
                     right: 0,
                     child: HomeAppBar(
                       state: state,
+                      tagName: tagName,
                     ),
                   ),
                 ],
@@ -98,10 +106,12 @@ class HomeView extends StatelessWidget {
 }
 
 class HomeAppBar extends StatefulWidget {
-  final HomeState state;
+  final NewsListState state;
+  final String tagName;
   const HomeAppBar({
     super.key,
     required this.state,
+    required this.tagName,
   });
 
   @override
@@ -110,10 +120,10 @@ class HomeAppBar extends StatefulWidget {
 
 class _HomeAppBarState extends State<HomeAppBar> {
   void firstUpload() {
-    var cubit = context.read<HomeCubit>();
-    var state = context.read<HomeCubit>().state;
+    var cubit = context.read<NewsListCubit>();
+    var state = context.read<NewsListCubit>().state;
     if (state.newsList.isNotEmpty) {
-      if (cubit.state.status == HomeStatus.LOADED) {
+      if (cubit.state.status == NewsListStatus.LOADED) {
         cubit.getCityById(state.newsList[0].cityId);
         cubit.getUserByUsername(state.newsList[0].username);
       }
@@ -148,9 +158,16 @@ class _HomeAppBarState extends State<HomeAppBar> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'haberify',
-                style: TextStyle(
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                "#${widget.tagName}",
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.w400,
@@ -183,8 +200,8 @@ class PageBuild extends StatelessWidget {
 
   final Size size;
   final NewsModel newsModel;
-  final HomeCubit cubit;
-  final HomeState state;
+  final NewsListCubit cubit;
+  final NewsListState state;
 
   // bool readMore = false;
   @override
@@ -369,7 +386,7 @@ class PageBuild extends StatelessWidget {
                     const SizedBox(width: 8),
                   ],
                 )),
-            const SizedBox(height: 80),
+            const SizedBox(height: 12),
           ],
         ),
       ),

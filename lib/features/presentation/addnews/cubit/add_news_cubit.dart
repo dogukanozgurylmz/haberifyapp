@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
 import 'package:haberifyapp/features/data/models/city_model.dart';
 import 'package:haberifyapp/features/data/models/news_model.dart';
 import 'package:haberifyapp/features/data/models/tag_model.dart';
@@ -18,9 +19,11 @@ class AddNewsCubit extends Cubit<AddNewsState> {
     required CityRepository cityRepository,
     required TagRepository tagRepository,
     required NewsRepository newsRepository,
+    required UserLocalDatasource userLocalDatasource,
   })  : _cityRepository = cityRepository,
         _tagRepository = tagRepository,
         _newsRepository = newsRepository,
+        _userLocalDatasource = userLocalDatasource,
         super(
           AddNewsState(
             status: AddNewsStatus.INITIAL,
@@ -38,6 +41,8 @@ class AddNewsCubit extends Cubit<AddNewsState> {
   final CityRepository _cityRepository;
   final TagRepository _tagRepository;
   final NewsRepository _newsRepository;
+  final UserLocalDatasource _userLocalDatasource;
+
   final List<String> tagNameList = [];
   final TextEditingController titleTextController = TextEditingController();
   final TextEditingController contentTextController = TextEditingController();
@@ -67,7 +72,7 @@ class AddNewsCubit extends Cubit<AddNewsState> {
       await uploadImage(); //upload image to storage
       await downloadImages(); //download images storage
       await createNews(); //create new news
-      await createTag(); //create tag
+      await updateOrCreateTags(); //create tag
       _downloadURLs.clear();
       tagNameList.clear();
       titleTextController.clear();
@@ -83,19 +88,54 @@ class AddNewsCubit extends Cubit<AddNewsState> {
     }
   }
 
-  Future<void> createTag() async {
-    for (var tagName in tagNameList) {
-      TagModel tagModel = await _tagRepository.getTagByTagName(tagName);
+  // Future<void> createTag() async {
+  //   for (var tagName in tagNameList) {
+  //     TagModel tagModel = await _tagRepository.getTagByTagName(tagName);
+  //     if (tagModel.id.isNotEmpty) {
+  //       int count = tagModel.count + 1;
+  //       TagModel model = TagModel(
+  //         id: tagModel.id,
+  //         newsIds: [...tagModel.newsIds, state.newsId],
+  //         tag: tagName,
+  //         count: count,
+  //       );
+  //       await _tagRepository.update(model);
+  //     } else {
+  //       TagModel model = TagModel(
+  //         id: '',
+  //         newsIds: [state.newsId],
+  //         tag: tagName.trim().toLowerCase(),
+  //         count: 1,
+  //       );
+  //       await _tagRepository.create(model);
+  //     }
+  //   }
+  //   emit(state.copyWith(newsId: ''));
+  // }
+
+  Future<void> updateOrCreateTags() async {
+    // Firebase veritabanından gerekli tagleri al
+    List<TagModel> tags = await _tagRepository.getTagsByTagName(tagNameList);
+
+    for (String tagName in tagNameList) {
+      // Etiketler listesinde tagModel'i ara
+      TagModel tagModel = tags.firstWhere(
+        (tag) => tag.tag == tagName.trim().toLowerCase(),
+        orElse: () => TagModel(id: '', newsIds: [], tag: '', count: 0),
+      );
+
       if (tagModel.id.isNotEmpty) {
+        // Etiket veritabanında varsa, sayısını ve haber kimliklerini güncelle
         int count = tagModel.count + 1;
         TagModel model = TagModel(
           id: tagModel.id,
           newsIds: [...tagModel.newsIds, state.newsId],
-          tag: tagName,
+          tag: tagName.trim().toLowerCase(),
           count: count,
         );
         await _tagRepository.update(model);
       } else {
+        // Etiket veritabanında yoksa, count=1 ve newsIds=[state.newsId] olan yeni bir etiket oluştur
         TagModel model = TagModel(
           id: '',
           newsIds: [state.newsId],
@@ -105,15 +145,15 @@ class AddNewsCubit extends Cubit<AddNewsState> {
         await _tagRepository.create(model);
       }
     }
-    emit(state.copyWith(newsId: ''));
   }
 
   Future<void> createNews() async {
     int createdAt = DateTime.now().millisecondsSinceEpoch;
     CityModel city = await checkCity();
+    var userModel = await _userLocalDatasource.getUser();
     NewsModel newsModel = NewsModel(
       id: '',
-      username: 'dogukanozgurylmz',
+      username: userModel.username,
       newsPhotoIds: _downloadURLs,
       newsVideoIds: [],
       likes: [],
@@ -125,8 +165,10 @@ class AddNewsCubit extends Cubit<AddNewsState> {
       isSecure: false,
       isAnonymous: false,
     );
-    await _newsRepository.createNews(newsModel);
-    await getNewsByUsername(newsModel.username);
+    await _newsRepository
+        .createNews(newsModel)
+        .then((value) async => await getNewsByUsername(newsModel.username));
+
     emit(state.copyWith(status: AddNewsStatus.SENDLOADED));
   }
 

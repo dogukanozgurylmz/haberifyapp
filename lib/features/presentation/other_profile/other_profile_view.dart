@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:haberifyapp/features/data/models/news_model.dart';
 import 'package:haberifyapp/features/data/repositories/auth_repository.dart';
 import 'package:haberifyapp/features/data/repositories/city_repository.dart';
 import 'package:haberifyapp/features/data/repositories/follow_repository.dart';
@@ -14,15 +15,20 @@ import '../../data/datasouce/local/user_local_datasource.dart';
 import '../../data/repositories/follower_repository.dart';
 import '../../data/repositories/news_repository.dart';
 import '../../data/repositories/user_repository.dart';
+import 'cubit/other_profile_cubit.dart';
 
-class ProfileView extends StatefulWidget {
-  const ProfileView({super.key});
+class OtherProfileView extends StatefulWidget {
+  const OtherProfileView({
+    super.key,
+    required this.username,
+  });
+  final String username;
 
   @override
-  State<ProfileView> createState() => _ProfileViewState();
+  State<OtherProfileView> createState() => _OtherProfileViewState();
 }
 
-class _ProfileViewState extends State<ProfileView>
+class _OtherProfileViewState extends State<OtherProfileView>
     with SingleTickerProviderStateMixin {
   final ScrollController _gridScrollerController = ScrollController();
   late TabController _tabController;
@@ -70,19 +76,22 @@ class _ProfileViewState extends State<ProfileView>
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ProfileCubit(
+      create: (context) => OtherProfileCubit(
         userRepository: userRepository,
-        cityRepository: cityRepository,
-        newsRepository: newsRepository,
-        userLocalDatasource: userLocalDatasource,
-        authRepository: authRepository,
         followRepository: followRepository,
         followerRepository: followerRepository,
-      ),
-      child: BlocBuilder<ProfileCubit, ProfileState>(
+        newsRepository: newsRepository,
+        userLocalDatasource: userLocalDatasource,
+      )
+        ..getUserByUsername(widget.username)
+        ..getCurrentUser()
+        ..getAllNews(widget.username)
+        ..getFollowers(widget.username)
+        ..getFollows(widget.username),
+      child: BlocBuilder<OtherProfileCubit, OtherProfileState>(
         builder: (context, state) {
-          if (state.status == ProfileStatus.LOADED) {
-            var cubit = context.read<ProfileCubit>();
+          if (state.status == OtherProfileStatus.LOADED) {
+            var cubit = context.read<OtherProfileCubit>();
             return Scaffold(
               body: Center(
                 child: SafeArea(
@@ -117,20 +126,13 @@ class _ProfileViewState extends State<ProfileView>
                                                     BorderRadius.circular(20),
                                               ),
                                               child: InkWell(
-                                                onTap: () async {
-                                                  var signOut = cubit.signOut();
-                                                  await signOut.then((value) =>
-                                                      Navigator.of(context)
-                                                          .pushReplacement(
-                                                              MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            const SignInView(),
-                                                      )));
+                                                onTap: () {
+                                                  Navigator.of(context).pop();
                                                 },
                                                 child: const Padding(
                                                   padding: EdgeInsets.all(12.0),
                                                   child: Icon(
-                                                    Icons.settings,
+                                                    Icons.arrow_back_ios_new,
                                                     size: 24,
                                                   ),
                                                 ),
@@ -165,7 +167,7 @@ class _ProfileViewState extends State<ProfileView>
                                               BorderRadius.circular(45),
                                           image: DecorationImage(
                                             image: NetworkImage(
-                                              state.userModel.profilePhotoUrl,
+                                              state.userModel.username,
                                             ),
                                             fit: BoxFit.cover,
                                           ),
@@ -193,17 +195,36 @@ class _ProfileViewState extends State<ProfileView>
                                               ),
                                             ),
                                             const SizedBox(height: 8),
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                              child: const Padding(
-                                                padding: EdgeInsets.all(12.0),
-                                                child: Icon(
-                                                  Icons.edit,
-                                                  size: 24,
+                                            InkWell(
+                                              onTap: () {
+                                                cubit.follow();
+                                              },
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(
+                                                      12.0),
+                                                  child: state.isFollow
+                                                      ? LoadingAnimationWidget
+                                                          .inkDrop(
+                                                          color: Colors.black,
+                                                          size: 24,
+                                                        )
+                                                      : Icon(
+                                                          state.followerModel
+                                                                  .followerUsernames
+                                                                  .contains(state
+                                                                      .currentUser
+                                                                      .username)
+                                                              ? Icons.check
+                                                              : Icons
+                                                                  .person_add,
+                                                          size: 24,
+                                                        ),
                                                 ),
                                               ),
                                             ),
@@ -259,13 +280,15 @@ class _ProfileViewState extends State<ProfileView>
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          "${state.followerUsernames.length}",
-                                          style: TextStyle(
+                                          state.isFollow
+                                              ? "${state.followerModel.followerUsernames.length}"
+                                              : "${state.followerModel.followerUsernames.length}",
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w300,
                                           ),
                                         ),
-                                        Text(
+                                        const Text(
                                           "Takipçi",
                                           style: TextStyle(
                                             color: Colors.white,
@@ -279,7 +302,7 @@ class _ProfileViewState extends State<ProfileView>
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          "${state.followUsernames.length}",
+                                          "${state.followModel.followUsernames.length}",
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w300,
@@ -428,7 +451,7 @@ class _ProfileViewState extends State<ProfileView>
                 ),
               ),
             );
-          } else if (state.status == ProfileStatus.LOADING) {
+          } else if (state.status == OtherProfileStatus.LOADING) {
             return Center(
               child: LoadingAnimationWidget.prograssiveDots(
                   color: const Color(0xffff0000), size: 60),

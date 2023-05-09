@@ -32,17 +32,51 @@ class NewsRepository {
     return NewsModel.fromJson(data);
   }
 
+  Future<List<NewsModel>> getNewsListById(List<String> ids) async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await _ref
+        .orderBy('created_at', descending: false)
+        .where('id', whereIn: ids.map((e) => e).toList())
+        .get();
+    List<NewsModel> list = [];
+    querySnapshot.docs.forEach((element) {
+      list.add(NewsModel.fromJson(element.data()));
+    });
+    return list;
+  }
+
   Future<NewsModel> getNewsByUsername(String username) async {
-    QuerySnapshot<Map<String, dynamic>> querySnapshot =
-        await _ref.where('username', isEqualTo: username).get();
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await _ref
+        .orderBy('created_at')
+        .where('username', isEqualTo: username)
+        .get();
     Map<String, dynamic> data = querySnapshot.docs.last.data();
     return NewsModel.fromJson(data);
+  }
+
+  Future<List<NewsModel>> getNewsListByUsername(String username) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await _ref
+          .orderBy('created_at', descending: false)
+          .where('username', isEqualTo: username)
+          .get();
+      List<NewsModel> list = querySnapshot.docs.map((e) {
+        var jsonMap = json.decode(json.encode(e.data()));
+        return NewsModel.fromJson(jsonMap);
+      }).toList();
+      return list;
+    } catch (e) {
+      throw e.toString();
+    }
   }
 
   Future<void> createNews(NewsModel model) async {
     String docId = _ref.doc().id;
     model.id = docId;
     await _ref.doc(docId).set(model.toJson());
+  }
+
+  Future<void> like(String id, List<String> likes) async {
+    await _ref.doc(id).update({'likes': likes});
   }
 
   Future<void> uploadImage({

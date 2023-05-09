@@ -40,6 +40,18 @@ class TagRepository {
     return TagModel(id: '', newsIds: [], tag: '', count: 0);
   }
 
+  Future<List<TagModel>> getTagsByTagName(List<String> tagNames) async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await ref
+        .where('tag',
+            whereIn: tagNames.map((e) => e.trim().toLowerCase()).toList())
+        .get();
+    List<TagModel> tags = [];
+    querySnapshot.docs.forEach((doc) {
+      tags.add(TagModel.fromJson(doc.data()));
+    });
+    return tags;
+  }
+
   Future<void> update(TagModel model) async {
     await ref.doc(model.id).update({
       'news_ids': model.newsIds,

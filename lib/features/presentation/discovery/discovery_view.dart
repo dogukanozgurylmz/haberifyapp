@@ -4,7 +4,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:haberifyapp/features/data/repositories/news_repository.dart';
 import 'package:haberifyapp/features/data/repositories/tag_repository.dart';
 import 'package:haberifyapp/features/presentation/discovery/cubit/discovery_cubit.dart';
-import 'package:haberifyapp/features/widgets/blur_background.dart';
+import 'package:haberifyapp/features/presentation/newslist/news_list_view.dart';
 import 'package:haberifyapp/features/widgets/custom_textformfield.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -18,12 +18,13 @@ class DiscoveryView extends StatelessWidget {
       create: (context) => DiscoveryCubit(
         tagRepository: _tagRepository,
         newsRepository: _newsRepository,
-      )..getAllTag(),
+      ),
       child: BlocBuilder<DiscoveryCubit, DiscoveryState>(
         builder: (context, state) {
           return Scaffold(
+            backgroundColor: Colors.white,
             appBar: AppBar(
-              backgroundColor: Colors.transparent,
+              backgroundColor: Colors.white,
               elevation: 0,
               toolbarHeight: 60,
               title: const CustomTextFormField(
@@ -55,74 +56,95 @@ class DiscoveryWidget extends StatelessWidget {
       );
     } else if (state.status == DiscoveryStatus.LOADED) {
       return GridView.custom(
-        physics: const BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+            decelerationRate: ScrollDecelerationRate.fast),
         gridDelegate: SliverQuiltedGridDelegate(
-          crossAxisSpacing: 1,
-          mainAxisSpacing: 1,
-          crossAxisCount: 20,
+          // crossAxisSpacing: 4,
+          // mainAxisSpacing: 4,
+          crossAxisCount: 9,
           repeatPattern: QuiltedGridRepeatPattern.inverted,
           pattern: const [
-            QuiltedGridTile(12, 12),
-            QuiltedGridTile(4, 8),
-            QuiltedGridTile(8, 8),
-            QuiltedGridTile(8, 8),
-            QuiltedGridTile(8, 12),
-            QuiltedGridTile(12, 10),
-            QuiltedGridTile(8, 10),
-            QuiltedGridTile(4, 10),
+            // QuiltedGridTile(12, 6),
+            // QuiltedGridTile(12, 6),
+            // QuiltedGridTile(4, 8),
+            // QuiltedGridTile(8, 8),
+            // QuiltedGridTile(8, 8),
+            // QuiltedGridTile(8, 12),
+            // QuiltedGridTile(12, 10),
+            // QuiltedGridTile(8, 10),
+            // QuiltedGridTile(4, 10),
+            QuiltedGridTile(5, 3),
+            QuiltedGridTile(5, 3),
+            QuiltedGridTile(5, 3),
           ],
         ),
         childrenDelegate: SliverChildBuilderDelegate(
-          childCount: state.tags.length,
+          addAutomaticKeepAlives: true,
+          addRepaintBoundaries: true,
+          addSemanticIndexes: true,
+          childCount:
+              !state.hasReachedMax ? state.tags.length : state.tags.length,
           (context, index) {
-            if (index >= state.tags.length) {
-              context.read<DiscoveryCubit>().getAllTag();
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+            if (index >= state.tags.length - 1) {
+              if (!state.hasReachedMax) {
+                context.read<DiscoveryCubit>().getAllTag();
+                return Center(
+                    child: LoadingAnimationWidget.inkDrop(
+                  color: Colors.black,
+                  size: 16,
+                ));
+              }
             }
             final images = [];
             final tag = state.tags[index];
             // state.tagNewsImageMap.keys.;
             if (state.tagNewsImageMap.isNotEmpty) {
-              String firstWhere = state.tagNewsImageMap.keys
-                  .firstWhere((element) => element == tag.tag);
-              // if (firstWhere == tag.tag) {
               for (var value in state.tagNewsImageMap.values) {
                 images.add(value);
               }
-              // }
             }
-            return Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(
-                    images[index],
+            return GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => NewsListView(tagName: tag.tag),
+                ));
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(.5),
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        images[index],
+                      ),
+                      fit: BoxFit.cover,
+                    ),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      Colors.black87,
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-                child: Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Text(
-                      '#${tag.tag}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w300,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      gradient: const LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.black87,
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Text(
+                          '#${tag.tag}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
                       ),
                     ),
                   ),
