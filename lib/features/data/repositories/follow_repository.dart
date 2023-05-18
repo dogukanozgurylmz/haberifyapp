@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:haberifyapp/features/data/models/follow_model.dart';
+import 'package:habery/features/data/models/follow_model.dart';
 
 class FollowRepository {
   final CollectionReference<Map<String, dynamic>> _ref =

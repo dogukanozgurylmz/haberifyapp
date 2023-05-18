@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
-import 'package:haberifyapp/features/data/models/city_model.dart';
-import 'package:haberifyapp/features/data/repositories/city_repository.dart';
-import 'package:haberifyapp/features/data/repositories/news_repository.dart';
-import 'package:haberifyapp/features/data/repositories/tag_repository.dart';
-import 'package:haberifyapp/features/presentation/addnews/cubit/add_news_cubit.dart';
-import 'package:haberifyapp/features/widgets/custom_textformfield.dart';
+import 'package:habery/features/data/datasouce/local/user_local_datasource.dart';
+import 'package:habery/features/data/models/city_model.dart';
+import 'package:habery/features/data/repositories/city_repository.dart';
+import 'package:habery/features/data/repositories/news_repository.dart';
+import 'package:habery/features/data/repositories/tag_repository.dart';
+import 'package:habery/features/presentation/addnews/cubit/add_news_cubit.dart';
+import 'package:habery/features/widgets/custom_textformfield.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 

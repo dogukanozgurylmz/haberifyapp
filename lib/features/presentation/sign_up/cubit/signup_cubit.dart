@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
-import 'package:haberifyapp/features/data/models/follow_model.dart';
-import 'package:haberifyapp/features/data/repositories/auth_repository.dart';
-import 'package:haberifyapp/features/data/repositories/follow_repository.dart';
-import 'package:haberifyapp/features/data/repositories/follower_repository.dart';
-import 'package:haberifyapp/features/data/repositories/user_repository.dart';
+import 'package:habery/features/data/datasouce/local/user_local_datasource.dart';
+import 'package:habery/features/data/models/follow_model.dart';
+import 'package:habery/features/data/repositories/auth_repository.dart';
+import 'package:habery/features/data/repositories/follow_repository.dart';
+import 'package:habery/features/data/repositories/follower_repository.dart';
+import 'package:habery/features/data/repositories/user_repository.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../data/models/follower_model.dart';
@@ -60,6 +60,7 @@ class SignupCubit extends Cubit<SignupState> {
     await _authRepository.createUserWithEmailAndPassword(
         emailController.text.trim(), passwordController.text.trim());
     var currentUser = _authRepository.currentUser();
+    await uploadImage();
     await downloadImage();
     if (currentUser != null) {
       DateTime dateTime = DateTime.now();

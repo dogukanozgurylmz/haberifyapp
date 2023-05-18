@@ -1,7 +1,6 @@
 import 'dart:convert';
 
-import 'package:haberifyapp/features/data/models/news_model.dart';
-import 'package:haberifyapp/features/data/models/user_model.dart';
+import 'package:habery/features/data/models/news_model.dart';
 import 'package:hive/hive.dart';
 
 class NewsLocalDatasource {

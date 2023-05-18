@@ -1,11 +1,11 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
-import 'package:haberifyapp/features/data/models/user_model.dart';
-import 'package:haberifyapp/features/data/repositories/follow_repository.dart';
-import 'package:haberifyapp/features/data/repositories/follower_repository.dart';
-import 'package:haberifyapp/features/data/repositories/news_repository.dart';
-import 'package:haberifyapp/features/data/repositories/user_repository.dart';
+import 'package:habery/features/data/datasouce/local/user_local_datasource.dart';
+import 'package:habery/features/data/models/user_model.dart';
+import 'package:habery/features/data/repositories/follow_repository.dart';
+import 'package:habery/features/data/repositories/follower_repository.dart';
+import 'package:habery/features/data/repositories/news_repository.dart';
+import 'package:habery/features/data/repositories/user_repository.dart';
 
 import '../../../data/models/follow_model.dart';
 import '../../../data/models/follower_model.dart';

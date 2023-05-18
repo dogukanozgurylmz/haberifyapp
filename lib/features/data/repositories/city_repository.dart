@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:haberifyapp/features/data/models/city_model.dart';
+import 'package:habery/features/data/models/city_model.dart';
 
 class CityRepository {
   final CollectionReference<Map<String, dynamic>> ref =

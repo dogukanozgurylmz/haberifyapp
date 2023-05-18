@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:haberifyapp/features/data/models/news_model.dart';
-import 'package:haberifyapp/features/data/repositories/news_repository.dart';
+import 'package:habery/features/data/models/news_model.dart';
+import 'package:habery/features/data/repositories/news_repository.dart';
 
 import '../../../data/models/tag_model.dart';
 import '../../../data/repositories/tag_repository.dart';
@@ -30,7 +30,6 @@ class DiscoveryCubit extends Cubit<DiscoveryState> {
   final int _limit = 18;
   bool _hasReachedMax = false;
   List<TagModel> tagList = [];
-  final List<NewsModel> _newsList = [];
   final Map<String, String> _tagNewsImageMap = {};
 
   Future<void> init() async {
@@ -75,8 +74,7 @@ class DiscoveryCubit extends Cubit<DiscoveryState> {
       emit(state.copyWith(
         tagNewsImageMap: _tagNewsImageMap,
       ));
-    } catch (e) {
-      print(e.toString());
-    }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 }

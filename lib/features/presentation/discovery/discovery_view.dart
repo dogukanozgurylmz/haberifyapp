@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:haberifyapp/features/data/repositories/news_repository.dart';
-import 'package:haberifyapp/features/data/repositories/tag_repository.dart';
-import 'package:haberifyapp/features/presentation/discovery/cubit/discovery_cubit.dart';
-import 'package:haberifyapp/features/presentation/newslist/news_list_view.dart';
-import 'package:haberifyapp/features/widgets/custom_textformfield.dart';
+import 'package:habery/features/data/repositories/news_repository.dart';
+import 'package:habery/features/data/repositories/tag_repository.dart';
+import 'package:habery/features/presentation/discovery/cubit/discovery_cubit.dart';
+import 'package:habery/features/presentation/newslist/news_list_view.dart';
+import 'package:habery/features/presentation/search/search_view.dart';
+import 'package:habery/features/widgets/custom_textformfield.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 
 class DiscoveryView extends StatelessWidget {
   DiscoveryView({super.key});
@@ -27,9 +29,26 @@ class DiscoveryView extends StatelessWidget {
               backgroundColor: Colors.white,
               elevation: 0,
               toolbarHeight: 60,
-              title: const CustomTextFormField(
-                borderRadius: 30,
-                labelText: "Ara",
+              title: Hero(
+                tag: "search_discovery",
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    color: Colors.white,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: CustomTextFormField(
+                      borderRadius: 30,
+                      labelText: "Ara",
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => SearchView(),
+                        ));
+                      },
+                    ),
+                  ),
+                ),
               ),
             ),
             body: DiscoveryWidget(state: state),
@@ -50,10 +69,7 @@ class DiscoveryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.status == DiscoveryStatus.LOADING) {
-      return Center(
-        child: LoadingAnimationWidget.prograssiveDots(
-            color: const Color(0xffff0000), size: 40),
-      );
+      return const ShimmerEffect();
     } else if (state.status == DiscoveryStatus.LOADED) {
       return GridView.custom(
         physics: const BouncingScrollPhysics(
@@ -105,9 +121,27 @@ class DiscoveryWidget extends StatelessWidget {
             }
             return GestureDetector(
               onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => NewsListView(tagName: tag.tag),
-                ));
+                Navigator.of(context).push(
+                  PageRouteBuilder(
+                    transitionDuration: const Duration(milliseconds: 500),
+                    pageBuilder: (BuildContext context,
+                        Animation<double> animation,
+                        Animation<double> secondaryAnimation) {
+                      return NewsListView(tagName: tag.tag);
+                    },
+                    transitionsBuilder: (BuildContext context,
+                        Animation<double> animation,
+                        Animation<double> secondaryAnimation,
+                        Widget child) {
+                      return Align(
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                  ),
+                );
               },
               child: Padding(
                 padding: const EdgeInsets.all(.5),
@@ -119,12 +153,10 @@ class DiscoveryWidget extends StatelessWidget {
                       ),
                       fit: BoxFit.cover,
                     ),
-                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      gradient: const LinearGradient(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
                         colors: [
                           Colors.transparent,
                           Colors.black87,
@@ -157,5 +189,60 @@ class DiscoveryWidget extends StatelessWidget {
     } else {
       return const SizedBox.shrink();
     }
+  }
+}
+
+class ShimmerEffect extends StatelessWidget {
+  const ShimmerEffect({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer(
+      interval: const Duration(seconds: 0),
+      color: Colors.grey,
+      colorOpacity: 0.4,
+      enabled: true,
+      direction: const ShimmerDirection.fromLTRB(),
+      child: GridView.custom(
+        physics: const BouncingScrollPhysics(
+            decelerationRate: ScrollDecelerationRate.fast),
+        gridDelegate: SliverQuiltedGridDelegate(
+          // crossAxisSpacing: 4,
+          // mainAxisSpacing: 4,
+          crossAxisCount: 9,
+          repeatPattern: QuiltedGridRepeatPattern.inverted,
+          pattern: const [
+            // QuiltedGridTile(12, 6),
+            // QuiltedGridTile(12, 6),
+            // QuiltedGridTile(4, 8),
+            // QuiltedGridTile(8, 8),
+            // QuiltedGridTile(8, 8),
+            // QuiltedGridTile(8, 12),
+            // QuiltedGridTile(12, 10),
+            // QuiltedGridTile(8, 10),
+            // QuiltedGridTile(4, 10),
+            QuiltedGridTile(5, 3),
+            QuiltedGridTile(5, 3),
+            QuiltedGridTile(5, 3),
+          ],
+        ),
+        childrenDelegate: SliverChildBuilderDelegate(
+          addAutomaticKeepAlives: true,
+          addRepaintBoundaries: true,
+          addSemanticIndexes: true,
+          childCount: 9,
+          (context, index) {
+            return Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  width: 0.1,
+                  color: Colors.grey,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }

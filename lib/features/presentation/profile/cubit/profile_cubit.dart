@@ -1,14 +1,12 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
-import 'package:haberifyapp/features/data/models/news_model.dart';
-import 'package:haberifyapp/features/data/models/user_model.dart';
-import 'package:haberifyapp/features/data/repositories/auth_repository.dart';
-import 'package:haberifyapp/features/data/repositories/city_repository.dart';
-import 'package:haberifyapp/features/data/repositories/follow_repository.dart';
-import 'package:haberifyapp/features/data/repositories/follower_repository.dart';
-import 'package:haberifyapp/features/data/repositories/news_repository.dart';
-import 'package:haberifyapp/features/data/repositories/user_repository.dart';
+import 'package:habery/features/data/datasouce/local/user_local_datasource.dart';
+import 'package:habery/features/data/models/news_model.dart';
+import 'package:habery/features/data/models/user_model.dart';
+import 'package:habery/features/data/repositories/auth_repository.dart';
+import 'package:habery/features/data/repositories/follow_repository.dart';
+import 'package:habery/features/data/repositories/follower_repository.dart';
+import 'package:habery/features/data/repositories/news_repository.dart';
 
 import '../../../data/models/city_model.dart';
 import '../../../data/models/follow_model.dart';
@@ -18,16 +16,12 @@ part 'profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   ProfileCubit({
-    required UserRepository userRepository,
-    required CityRepository cityRepository,
     required NewsRepository newsRepository,
     required UserLocalDatasource userLocalDatasource,
     required AuthRepository authRepository,
     required FollowRepository followRepository,
     required FollowerRepository followerRepository,
-  })  : _userRepository = userRepository,
-        _newsRepository = newsRepository,
-        _cityRepository = cityRepository,
+  })  : _newsRepository = newsRepository,
         _userLocalDatasource = userLocalDatasource,
         _authRepository = authRepository,
         _followRepository = followRepository,
@@ -58,9 +52,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     init();
   }
 
-  final UserRepository _userRepository;
   final NewsRepository _newsRepository;
-  final CityRepository _cityRepository;
   final UserLocalDatasource _userLocalDatasource;
   final AuthRepository _authRepository;
   final FollowRepository _followRepository;

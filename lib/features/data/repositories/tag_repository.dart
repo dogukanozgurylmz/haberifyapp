@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:haberifyapp/features/data/models/tag_model.dart';
+import 'package:habery/features/data/models/tag_model.dart';
 
 class TagRepository {
   final CollectionReference<Map<String, dynamic>> ref =
@@ -46,9 +46,9 @@ class TagRepository {
             whereIn: tagNames.map((e) => e.trim().toLowerCase()).toList())
         .get();
     List<TagModel> tags = [];
-    querySnapshot.docs.forEach((doc) {
+    for (var doc in querySnapshot.docs) {
       tags.add(TagModel.fromJson(doc.data()));
-    });
+    }
     return tags;
   }
 
@@ -64,5 +64,16 @@ class TagRepository {
     Map<String, dynamic> json = model.toJson();
     json['id'] = docId;
     await ref.doc(docId).set(json);
+  }
+
+  Future<List<TagModel>> search(String query) async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await ref
+        .where('tag', isGreaterThanOrEqualTo: query)
+        .where('tag', isLessThanOrEqualTo: '$query\uf8ff')
+        .get();
+
+    List<TagModel> list =
+        querySnapshot.docs.map((e) => TagModel.fromJson(e.data())).toList();
+    return list;
   }
 }

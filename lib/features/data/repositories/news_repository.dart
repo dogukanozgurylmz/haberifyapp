@@ -38,9 +38,9 @@ class NewsRepository {
         .where('id', whereIn: ids.map((e) => e).toList())
         .get();
     List<NewsModel> list = [];
-    querySnapshot.docs.forEach((element) {
+    for (var element in querySnapshot.docs) {
       list.add(NewsModel.fromJson(element.data()));
-    });
+    }
     return list;
   }
 
@@ -102,5 +102,24 @@ class NewsRepository {
     var random = Random.secure();
     var values = List<int>.generate(length, (i) => random.nextInt(256));
     return base64Url.encode(values);
+  }
+
+  Future<List<NewsModel>> search(String query) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('news') // Veritabanı koleksiyonunu belirtin
+              // .where('content', isGreaterThanOrEqualTo: query)
+              // .where('content', isLessThanOrEqualTo: '$query\uf8ff')
+              .where('content', arrayContains: query)
+              .get();
+
+      List<NewsModel> list = querySnapshot.docs
+          .map((doc) => NewsModel.fromJson(doc.data()))
+          .toList();
+      return list;
+    } catch (e) {
+      return [];
+    }
   }
 }

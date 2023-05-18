@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:haberifyapp/features/data/models/user_model.dart';
+import 'package:habery/features/data/models/user_model.dart';
 
 class UserRepository {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -77,5 +77,17 @@ class UserRepository {
     var random = Random.secure();
     var values = List<int>.generate(length, (i) => random.nextInt(256));
     return base64Url.encode(values);
+  }
+
+  Future<List<UserModel>> search(String query) async {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await firestore
+        .collection('users')
+        .where('username', isGreaterThanOrEqualTo: query)
+        .where('username', isLessThanOrEqualTo: '$query\uf8ff')
+        .get();
+
+    List<UserModel> list =
+        querySnapshot.docs.map((e) => UserModel.fromJson(e.data())).toList();
+    return list;
   }
 }

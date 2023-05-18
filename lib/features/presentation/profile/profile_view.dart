@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:haberifyapp/features/data/repositories/auth_repository.dart';
-import 'package:haberifyapp/features/data/repositories/city_repository.dart';
-import 'package:haberifyapp/features/data/repositories/follow_repository.dart';
-import 'package:haberifyapp/features/presentation/profile/cubit/profile_cubit.dart';
-import 'package:haberifyapp/features/presentation/sign_in/sign_in_view.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:habery/features/data/repositories/auth_repository.dart';
+import 'package:habery/features/data/repositories/city_repository.dart';
+import 'package:habery/features/data/repositories/follow_repository.dart';
+import 'package:habery/features/presentation/profile/cubit/profile_cubit.dart';
+import 'package:habery/features/presentation/sign_in/sign_in_view.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 
 import '../../data/datasouce/local/user_local_datasource.dart';
 import '../../data/repositories/follower_repository.dart';
@@ -71,8 +71,6 @@ class _ProfileViewState extends State<ProfileView>
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => ProfileCubit(
-        userRepository: userRepository,
-        cityRepository: cityRepository,
         newsRepository: newsRepository,
         userLocalDatasource: userLocalDatasource,
         authRepository: authRepository,
@@ -260,12 +258,12 @@ class _ProfileViewState extends State<ProfileView>
                                       children: [
                                         Text(
                                           "${state.followerUsernames.length}",
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w300,
                                           ),
                                         ),
-                                        Text(
+                                        const Text(
                                           "Takipçi",
                                           style: TextStyle(
                                             color: Colors.white,
@@ -370,12 +368,8 @@ class _ProfileViewState extends State<ProfileView>
                                             MediaQuery.of(context).size.height,
                                         width:
                                             MediaQuery.of(context).size.width,
-                                        placeholder: (context, url) => Center(
-                                          child: LoadingAnimationWidget
-                                              .twoRotatingArc(
-                                                  color:
-                                                      const Color(0xffff0000),
-                                                  size: 40),
+                                        placeholder: (context, url) => Shimmer(
+                                          child: const SizedBox(),
                                         ),
                                         errorWidget: (context, url, error) =>
                                             const Icon(Icons.error),
@@ -429,15 +423,76 @@ class _ProfileViewState extends State<ProfileView>
               ),
             );
           } else if (state.status == ProfileStatus.LOADING) {
-            return Center(
-              child: LoadingAnimationWidget.prograssiveDots(
-                  color: const Color(0xffff0000), size: 60),
-            );
+            return const ShimmerEffect();
           } else {
             return const SizedBox.shrink();
           }
         },
       ),
+    );
+  }
+}
+
+class ShimmerEffect extends StatelessWidget {
+  const ShimmerEffect({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer(
+      interval: const Duration(seconds: 0),
+      color: Colors.grey,
+      colorOpacity: 0.4,
+      enabled: true,
+      direction: const ShimmerDirection.fromLTRB(),
+      child: SafeArea(
+          child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomRight: Radius.circular(45),
+            ),
+            child: ColoredBox(
+              color: Colors.black12,
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height * 0.3,
+              ),
+            ),
+          ),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(12.0),
+              physics: const BouncingScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: MediaQuery.of(context).size.width * .5,
+                mainAxisExtent: 220,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: 4,
+              itemBuilder: (context, index) {
+                return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
+                    ),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0),
+                        Colors.black.withOpacity(0.1),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      )),
     );
   }
 }

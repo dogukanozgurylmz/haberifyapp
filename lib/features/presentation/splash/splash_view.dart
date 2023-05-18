@@ -2,8 +2,8 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:haberifyapp/features/presentation/main_view.dart';
-import 'package:haberifyapp/features/presentation/sign_in/sign_in_view.dart';
+import 'package:habery/features/presentation/main_view.dart';
+import 'package:habery/features/presentation/sign_in/sign_in_view.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -50,14 +50,11 @@ class _SplashViewState extends State<SplashView> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Text(
-              "haberify",
-              style: TextStyle(
-                fontSize: 60,
-                fontWeight: FontWeight.w400,
-                color: Colors.black,
-              ),
+          children: [
+            Image.asset(
+              "assets/images/icons/icon.png",
+              width: 120,
+              height: 120,
             ),
           ],
         ),

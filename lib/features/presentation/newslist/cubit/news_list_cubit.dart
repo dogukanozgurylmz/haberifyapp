@@ -1,18 +1,13 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:haberifyapp/features/data/models/tag_model.dart';
-import 'package:haberifyapp/features/data/repositories/tag_repository.dart';
+import 'package:habery/features/data/models/tag_model.dart';
+import 'package:habery/features/data/repositories/tag_repository.dart';
 import 'package:intl/intl.dart';
-
-import '../../../data/datasouce/local/news_local_datasource.dart';
 import '../../../data/datasouce/local/user_local_datasource.dart';
 import '../../../data/models/city_model.dart';
-import '../../../data/models/follow_model.dart';
 import '../../../data/models/news_model.dart';
 import '../../../data/models/user_model.dart';
-import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/city_repository.dart';
-import '../../../data/repositories/follow_repository.dart';
 import '../../../data/repositories/news_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 
@@ -23,14 +18,10 @@ class NewsListCubit extends Cubit<NewsListState> {
     required NewsRepository newsRepository,
     required CityRepository cityRepository,
     required UserRepository userRepository,
-    required FollowRepository followRepository,
-    required AuthRepository authRepository,
     required TagRepository tagRepository,
   })  : _newsRepository = newsRepository,
         _cityRepository = cityRepository,
         _userRepository = userRepository,
-        _followRepository = followRepository,
-        _authRepository = authRepository,
         _tagRepository = tagRepository,
         super(NewsListState(
           status: NewsListStatus.INITIAL,
@@ -61,11 +52,8 @@ class NewsListCubit extends Cubit<NewsListState> {
   final NewsRepository _newsRepository;
   final CityRepository _cityRepository;
   final UserRepository _userRepository;
-  final FollowRepository _followRepository;
-  final AuthRepository _authRepository;
   final TagRepository _tagRepository;
 
-  final List<String> _followUsernames = [];
   String username = "";
 
   TagModel _tagModel = TagModel(
@@ -101,7 +89,6 @@ class NewsListCubit extends Cubit<NewsListState> {
       );
       emit(state.copyWith(newsList: list));
     } catch (e) {
-      print(e.toString());
       // emit(NewsError(e.toString()));
     }
   }

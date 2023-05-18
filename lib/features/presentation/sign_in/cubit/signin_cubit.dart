@@ -1,9 +1,9 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
-import 'package:haberifyapp/features/data/repositories/auth_repository.dart';
-import 'package:haberifyapp/features/data/repositories/user_repository.dart';
+import 'package:habery/features/data/datasouce/local/user_local_datasource.dart';
+import 'package:habery/features/data/repositories/auth_repository.dart';
+import 'package:habery/features/data/repositories/user_repository.dart';
 
 part 'signin_state.dart';
 
@@ -29,14 +29,16 @@ class SigninCubit extends Cubit<SigninState> {
   final TextEditingController passwordController = TextEditingController();
 
   Future<void> signInWithEmailAndPassword() async {
+    emit(state.copyWith(status: SignInStatus.LOADING));
     try {
       await _authRepository
           .signInWithEmailAndPassword(
               emailController.text.trim(), passwordController.text.trim())
           .then((value) => emit(state.copyWith(isSignIn: true)));
       await checkUser();
+      emit(state.copyWith(status: SignInStatus.LOADED));
     } catch (e) {
-      print(e.toString());
+      // print(e.toString());
     }
   }
 

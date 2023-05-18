@@ -1,16 +1,13 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/rendering.dart';
-import 'package:haberifyapp/features/data/datasouce/local/news_local_datasource.dart';
-import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
-import 'package:haberifyapp/features/data/models/city_model.dart';
-import 'package:haberifyapp/features/data/models/follow_model.dart';
-import 'package:haberifyapp/features/data/repositories/auth_repository.dart';
-import 'package:haberifyapp/features/data/repositories/city_repository.dart';
-import 'package:haberifyapp/features/data/repositories/follow_repository.dart';
-import 'package:haberifyapp/features/data/repositories/news_repository.dart';
-import 'package:haberifyapp/features/data/repositories/user_repository.dart';
+import 'package:habery/features/data/datasouce/local/news_local_datasource.dart';
+import 'package:habery/features/data/datasouce/local/user_local_datasource.dart';
+import 'package:habery/features/data/models/city_model.dart';
+import 'package:habery/features/data/models/follow_model.dart';
+import 'package:habery/features/data/repositories/city_repository.dart';
+import 'package:habery/features/data/repositories/follow_repository.dart';
+import 'package:habery/features/data/repositories/news_repository.dart';
+import 'package:habery/features/data/repositories/user_repository.dart';
 import 'package:intl/intl.dart';
 
 import '../../../data/models/news_model.dart';
@@ -24,13 +21,11 @@ class HomeCubit extends Cubit<HomeState> {
     required CityRepository cityRepository,
     required UserRepository userRepository,
     required FollowRepository followRepository,
-    required AuthRepository authRepository,
     required NewsLocalDatasource newsLocalDatasource,
   })  : _newsRepository = newsRepository,
         _cityRepository = cityRepository,
         _userRepository = userRepository,
         _followRepository = followRepository,
-        _authRepository = authRepository,
         _newsLocalDatasource = newsLocalDatasource,
         super(HomeState(
           status: HomeStatus.INITIAL,
@@ -67,7 +62,6 @@ class HomeCubit extends Cubit<HomeState> {
   final CityRepository _cityRepository;
   final UserRepository _userRepository;
   final FollowRepository _followRepository;
-  final AuthRepository _authRepository;
   final NewsLocalDatasource _newsLocalDatasource;
 
   final List<String> _followUsernames = [];

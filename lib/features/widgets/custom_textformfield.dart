@@ -8,6 +8,7 @@ class CustomTextFormField extends StatefulWidget {
   final Function(String text)? onChanged;
   final Function()? onEditingComplete;
   final Function(dynamic value)? onFieldSubmitted;
+  final Function()? onTap;
   final IconButton? suffixIcon;
   final Color? fillColor;
   final Color? shadowColor;
@@ -32,6 +33,7 @@ class CustomTextFormField extends StatefulWidget {
     this.onChanged,
     this.onEditingComplete,
     this.onFieldSubmitted,
+    this.onTap,
     this.suffixIcon,
     this.fillColor,
     this.shadowColor,
@@ -75,6 +77,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
             ],
           ),
           child: TextFormField(
+            onTap: widget.onTap,
             textCapitalization: TextCapitalization.sentences,
             maxLines: widget.maxLine ?? 1,
             controller: widget.controller,

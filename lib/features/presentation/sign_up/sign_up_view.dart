@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:haberifyapp/features/data/datasouce/local/user_local_datasource.dart';
-import 'package:haberifyapp/features/data/repositories/auth_repository.dart';
-import 'package:haberifyapp/features/data/repositories/follow_repository.dart';
-import 'package:haberifyapp/features/data/repositories/follower_repository.dart';
-import 'package:haberifyapp/features/data/repositories/user_repository.dart';
-import 'package:haberifyapp/features/presentation/sign_in/sign_in_view.dart';
-import 'package:haberifyapp/features/widgets/custom_textformfield.dart';
+import 'package:habery/features/data/datasouce/local/user_local_datasource.dart';
+import 'package:habery/features/data/repositories/auth_repository.dart';
+import 'package:habery/features/data/repositories/follow_repository.dart';
+import 'package:habery/features/data/repositories/follower_repository.dart';
+import 'package:habery/features/data/repositories/user_repository.dart';
+import 'package:habery/features/presentation/sign_in/sign_in_view.dart';
+import 'package:habery/features/widgets/custom_textformfield.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'cubit/signup_cubit.dart';
@@ -178,20 +178,21 @@ class SignUpView extends StatelessWidget {
                           : GestureDetector(
                               onTap: () async {
                                 if (cubit.controle()) {
-                                  await cubit.createUserWithEmailAndPassword();
-                                  await cubit.uploadImage();
-                                }
-                                if (state.isSignUp) {
-                                  Navigator.of(context)
-                                      .pushReplacement(MaterialPageRoute(
-                                    builder: (context) => const SignInView(),
-                                  ));
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(state.errorMessage),
-                                    ),
-                                  );
+                                  await cubit
+                                      .createUserWithEmailAndPassword()
+                                      .whenComplete(() => Navigator.of(context)
+                                              .pushReplacement(
+                                                  MaterialPageRoute(
+                                            builder: (context) =>
+                                                const SignInView(),
+                                          )))
+                                      .onError((error, stackTrace) =>
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(state.errorMessage),
+                                            ),
+                                          ));
                                 }
                               },
                               child: Container(
